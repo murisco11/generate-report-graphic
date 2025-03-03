@@ -218,13 +218,18 @@ def index(request):
                     orcamentos.append(orcamento)
 
                 df = pd.DataFrame({"Ramo Empresarial": ramos_empresariais, "Orcamento": orcamentos})
+                df_total = df.groupby("Ramo Empresarial")["Orcamento"].sum().sort_values(ascending=False)
+                fig, ax = plt.subplots(figsize=(12, 8))
+                df_total.plot(kind="barh", ax=ax, color='skyblue')
+                ax.set_xlabel("Orçamento Total (R$)")
+                ax.set_ylabel("Ramo Empresarial")
+                ax.set_title("Orçamento Total por Ramo Empresarial")
+                plt.xticks(rotation=45)
+                plt.tight_layout()
+                
+                string = [f"{ramo}: R${orcamento:,.2f}" for ramo, orcamento in df_total.items()]
+                response = string
 
-                orcamento_por_ramo = df.groupby("Ramo Empresarial")["Orcamento"].sum()
-
-                fig, ax = plt.subplots(figsize=(10, 8))
-                ax.pie(orcamento_por_ramo, labels=orcamento_por_ramo.index, autopct='%1.1f%%', startangle=90) # type: ignore
-                ax.axis('equal') 
-                ax.set_title("Distribuição do Orçamento por Ramo Empresarial")
 
             buffer = io.BytesIO()  
             plt.savefig(buffer, format="png") 
