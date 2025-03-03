@@ -16,7 +16,7 @@ def index(request):
 
         if not param:
             return JsonResponse(
-                {"Erro: Insira um parâmetro válido!": str(e)}, status=404
+                {"Erro: Insira um parâmetro válido!": str(e)}, status=404 # type: ignore
             )
         try:
             data = json.loads(request.body)
@@ -42,7 +42,7 @@ def index(request):
                 ax.set_title(titulo)
                 ax.pie(
                     estado_counts,
-                    labels=estado_counts.index,
+                    labels=estado_counts.index, # type: ignore
                     autopct="%1.1f%%",
                     startangle=90,
                 )
@@ -62,7 +62,7 @@ def index(request):
                 string = [f"{mes_ano}: {count}" for mes_ano, count in mes_ano_counts.items()]
 
                 fig, ax = plt.subplots(figsize=(12, 8))
-                ax.bar(mes_ano_counts.index, mes_ano_counts.values)
+                ax.bar(mes_ano_counts.index, mes_ano_counts.values) # type: ignore
                 ax.set_xlabel("Mês/Ano")
                 ax.set_ylabel("Contagem")
                 ax.set_title("Contagem de Datas por Mês/Ano")
@@ -83,7 +83,7 @@ def index(request):
 
 
                 fig, ax = plt.subplots(figsize=(12, 8))
-                ax.bar(dispositivos_counts.index, dispositivos_counts.values)
+                ax.bar(dispositivos_counts.index, dispositivos_counts.values) # type: ignore
                 ax.set_xlabel("Dispositivos")
                 ax.set_ylabel("Contagem")
                 ax.set_title("Contagem de Dispositivos")
@@ -101,7 +101,7 @@ def index(request):
                 fig, ax = plt.subplots(figsize=(12, 8))
                 ax.bar(
                     canais_counts.index,
-                    canais_counts.values,
+                    canais_counts.values, # type: ignore
                     color=["blue", "green", "orange"],
                 )
                 ax.set_xlabel("Canais")
@@ -117,9 +117,9 @@ def index(request):
 
                 max_valor = df["Valores"].max().item()
                 min_valor = df["Valores"].min().item()
-                mediana = df["Valores"].median().item()
+                mediana = df["Valores"].median().item() # type: ignore
                 soma = df["Valores"].sum().item()
-                media = df["Valores"].mean().item()
+                media = df["Valores"].mean().item() # type: ignore
 
                 return JsonResponse(
                     {
@@ -146,7 +146,7 @@ def index(request):
        
                 
                 fig, ax = plt.subplots(figsize=(12, 8))
-                ax.barh(faixa_counts.index, faixa_counts.values)
+                ax.barh(faixa_counts.index, faixa_counts.values) # type: ignore
                 ax.set_xlabel("Quantidade de Orçamentos")
                 ax.set_ylabel("Faixa de Valores")
                 ax.set_title("Distribuição de Orçamentos por Faixa")
@@ -184,6 +184,47 @@ def index(request):
                 plt.xticks(rotation=45)
 
                 response = string
+            
+            elif param == "ramos_empresariais":
+                ramos = data.get("ramos_empresariais", [])
+                print(ramos)
+                df = pd.DataFrame(ramos, columns=["Ramos Empresariais"])
+                
+                ramos_counts = df["Ramos Empresariais"].value_counts()
+                string = [f"{ramo}: {count}" for ramo, count in ramos_counts.items()]
+            
+                fig, ax = plt.subplots(figsize=(10, 8))
+                ax.pie(
+                        ramos_counts.values, # type: ignore
+                        labels=ramos_counts.index, # type: ignore
+                        autopct="%1.1f%%",
+                        colors=["blue", "green", "orange", "red", "purple"],
+                        startangle=140,
+                        wedgeprops={"edgecolor": "black"}
+    )
+                ax.set_title("Distribuição dos Ramos Empresariais")
+                response = string
+
+            elif param == "empresarial_orcamento":
+                data = data.get("data", [])
+                ramos_empresariais = []
+                orcamentos = []
+
+                for item in data:
+                    ramo = item["ramo_empresarial"]
+                    orcamento = item["orcamento"]
+        
+                    ramos_empresariais.append(ramo)
+                    orcamentos.append(orcamento)
+
+                df = pd.DataFrame({"Ramo Empresarial": ramos_empresariais, "Orcamento": orcamentos})
+
+                orcamento_por_ramo = df.groupby("Ramo Empresarial")["Orcamento"].sum()
+
+                fig, ax = plt.subplots(figsize=(10, 8))
+                ax.pie(orcamento_por_ramo, labels=orcamento_por_ramo.index, autopct='%1.1f%%', startangle=90) # type: ignore
+                ax.axis('equal') 
+                ax.set_title("Distribuição do Orçamento por Ramo Empresarial")
 
             buffer = io.BytesIO()  
             plt.savefig(buffer, format="png") 
