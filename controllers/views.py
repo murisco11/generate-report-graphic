@@ -138,8 +138,8 @@ def index(request):
             elif param == "orcamentos_grafico":
                 orcamentos = data.get("orcamentos", [])
                 df = pd.DataFrame(orcamentos, columns=["Valores"])
-                bins = [5000, 10000, 20000, 50000, 100000] 
-                labels = ['5k-10k', '10k-20k', '20k-50k', '50k-100k'] 
+                bins = [5000, 10000, 20000, 50000, 100000, 200000, 300000, 500000, 1000000] 
+                labels = ['5k-10k', '10k-20k', '20k-50k', '50k-100k', '100k-200k', '200k-300k', '300k-500k', '500k-1m'] 
                 df['Faixas'] = pd.cut(df['Valores'], bins=bins, labels=labels, include_lowest=True)
                 faixa_counts = df['Faixas'].value_counts().sort_index()    
                 string = [f"{faixa}: {count}" for faixa, count in faixa_counts.items()]
