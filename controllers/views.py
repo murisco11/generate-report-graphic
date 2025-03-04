@@ -13,6 +13,17 @@ from datetime import datetime
 
 @csrf_exempt 
 def index(request):
+    
+    def gera_grafico_padrao (title_x, title_y, var, titulo):
+        plt.figure(figsize=(12, 8))
+        sns.barplot(x=var.index, y=var.values, palette="Blues_d")
+        plt.title(titulo, fontsize=16)
+        plt.xlabel(title_x, fontsize=12)
+        plt.ylabel(title_y, fontsize=12)
+        plt.xticks(rotation=15)
+        for i, v in enumerate(var.values):
+            plt.text(i, v + 0.5, str(v), ha='center', va='bottom', fontsize=8)
+    
     if request.method == "POST":
         param = request.GET.get("param")
 
@@ -40,14 +51,7 @@ def index(request):
                 string = [f"{estado}: {count}" for estado, count in estado_counts.items()]
                 response = string
 
-                plt.figure(figsize=(12, 8))
-                sns.barplot(x=estado_counts.index, y=estado_counts.values, palette="Blues_d")
-                plt.title(titulo, fontsize=16)
-                plt.xlabel("Estado", fontsize=12)
-                plt.ylabel("Quantidade", fontsize=12)
-                plt.xticks(rotation=15)
-                for i, v in enumerate(estado_counts.values):
-                    plt.text(i, v + 0.5, str(v), ha='center', va='bottom', fontsize=8)
+                gera_grafico_padrao("Estados", "Quantidade de leads", estado_counts, titulo)
 
                 response = string
 
@@ -65,17 +69,8 @@ def index(request):
                 trimestre_counts = df["Trimestre_Ano"].value_counts().sort_index()
 
                 string = [f"{trimestre}: {count}" for trimestre, count in trimestre_counts.items()]
-
-                plt.figure(figsize=(12, 8))
-                sns.barplot(x=trimestre_counts.index, y=trimestre_counts.values, color='skyblue')
-                plt.xlabel("Trimestre/Ano")
-                plt.ylabel("Contagem")
-                plt.title("Contagem de Datas por Trimestre/Ano")
-                plt.xticks(rotation=45)
-                plt.tight_layout()
-
-                for i, v in enumerate(trimestre_counts.values):
-                    plt.text(i, v + 0.5, str(v), ha='center', va='bottom', fontsize=10)
+                
+                gera_grafico_padrao("Trimestre/ano", "Contagem", trimestre_counts, "Chegada de leads por Trimestre/ano")
 
                 response = string
 
@@ -90,13 +85,7 @@ def index(request):
                 dispositivos_counts = df["Dispositivos"].value_counts()
                 string = [f"{dispositivo}: {count}" for dispositivo, count in dispositivos_counts.items()]
 
-
-                fig, ax = plt.subplots(figsize=(12, 8))
-                ax.bar(dispositivos_counts.index, dispositivos_counts.values) # type: ignore
-                ax.set_xlabel("Dispositivos")
-                ax.set_ylabel("Contagem")
-                ax.set_title("Contagem de Dispositivos")
-                ax.set_xticklabels(dispositivos_counts.index, rotation=45)
+                gera_grafico_padrao("Dispositivos", "Contagem", dispositivos_counts, "Contagem de dispositivos dos leads")
 
                 response = string
 
@@ -105,7 +94,6 @@ def index(request):
                 df = pd.DataFrame(canais, columns=["Canais"])
                 canais_counts = df["Canais"].value_counts()
                 string = [f"{canal}: {count}" for canal, count in canais_counts.items()]
-
 
                 fig, ax = plt.subplots(figsize=(12, 8))
                 ax.bar(
@@ -116,8 +104,7 @@ def index(request):
                 ax.set_xlabel("Canais")
                 ax.set_ylabel("Quantidade")
                 ax.set_title("Contagem de Canais de Posicionamento")
-                ax.set_xticklabels(canais_counts.index, rotation=45)
-
+                ax.set_xticklabels(canais_counts.index, rotation=5)
                 response = string
 
             elif param == "orcamentos_medidas":
@@ -190,14 +177,8 @@ def index(request):
                 ticket_medio_estado = ticket_medio_estado.sort_values()
 
                 string = [f"{ticket_medio}: {count}" for ticket_medio, count in ticket_medio_estado.items()]
-
-                plt.figure(figsize=(12, 8))
-                ax = sns.barplot(x=ticket_medio_estado.values, y=ticket_medio_estado.index, palette='Blues_r')
-                for i, v in enumerate(ticket_medio_estado.values):
-                    ax.text(v + 0.5, i, f'R$ {v:,.2f}', color='black', va='center')
-                ax.set_xlabel("Ticket Médio (R$)", fontsize=14)
-                ax.set_ylabel("Estado", fontsize=14)
-                ax.set_title("Ticket Médio por Estado", fontsize=16)
+                
+                gera_grafico_padrao("Ticket médio", "Estado", ticket_medio_estado, "Ticket Médio por Estado (R$)")
 
                 response = string
             
@@ -206,7 +187,7 @@ def index(request):
                 
                 df = pd.DataFrame(ramos, columns=["Ramos Empresariais"])
                 ramos_counts = df["Ramos Empresariais"].value_counts()
-
+                
                 plt.figure(figsize=(12, 8))
                 sns.barplot(
                     x=ramos_counts.values, 
@@ -220,7 +201,6 @@ def index(request):
                     plt.text(value + 1, index, str(value), va='center', fontsize=10)
                 plt.grid(axis="x", linestyle="--", alpha=0.7)
                 plt.tight_layout()
-
                 string = [f"{ramo}: {count}" for ramo, count in ramos_counts.items()]
                 response = string
 
@@ -239,7 +219,7 @@ def index(request):
                 df = pd.DataFrame({"Ramo Empresarial": ramos_empresariais, "Orcamento": orcamentos})
                 df_total = df.groupby("Ramo Empresarial")["Orcamento"].sum().sort_values(ascending=False).reset_index()
 
-                plt.figure(figsize=(12, 8))
+                plt.figure(figsize=(22, 11))
                 sns.barplot(
                     data=df_total, 
                     y="Ramo Empresarial", 
@@ -252,8 +232,7 @@ def index(request):
                 plt.ylabel("Ramo Empresarial")
                 plt.title("Orçamento Total por Ramo Empresarial")
                 plt.grid(axis="x", linestyle="--", alpha=0.7)
-                plt.tight_layout()
-
+                
                 string = [f"{ramo}: R${orcamento:,.2f}" for ramo, orcamento in zip(df_total["Ramo Empresarial"], df_total["Orcamento"])]
                 response = string
 
