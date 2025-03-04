@@ -1,6 +1,8 @@
 import base64
 import io
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+import seaborn as sns
 import pandas as pd
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -38,35 +40,42 @@ def index(request):
                 string = [f"{estado}: {count}" for estado, count in estado_counts.items()]
                 response = string
 
-                fig, ax = plt.subplots(figsize=(12, 8))
-                ax.set_title(titulo)
-                ax.pie(
-                    estado_counts,
-                    labels=estado_counts.index, # type: ignore
-                    autopct="%1.1f%%",
-                    startangle=90,
-                )
-                ax.axis("equal")
+                plt.figure(figsize=(12, 8))
+                sns.barplot(x=estado_counts.index, y=estado_counts.values, palette="Blues_d")
+                plt.title(titulo, fontsize=16)
+                plt.xlabel("Estado", fontsize=12)
+                plt.ylabel("Quantidade", fontsize=12)
+                plt.xticks(rotation=15)
+                for i, v in enumerate(estado_counts.values):
+                    plt.text(i, v + 0.5, str(v), ha='center', va='bottom', fontsize=8)
 
                 response = string
 
             elif param == "datas":
                 datas = data.get("datas", [])
                 datas_convertidas = [
-                    datetime.strptime(data_str, "%d/%m/%Y").strftime("%m/%Y")
-                    for data_str in datas
+                    datetime.strptime(data_str, "%d/%m/%Y") for data_str in datas
                 ]
-                df = pd.DataFrame(datas_convertidas, columns=["Mes_Ano"])
-                mes_ano_counts = df["Mes_Ano"].value_counts().sort_index()
 
-                string = [f"{mes_ano}: {count}" for mes_ano, count in mes_ano_counts.items()]
+                df = pd.DataFrame(datas_convertidas, columns=["Data"])
+                df["Ano"] = df["Data"].dt.year
+                df["Mês"] = df["Data"].dt.month
+                df["Trimestre"] = ((df["Mês"] - 1) // 3) + 1
+                df["Trimestre_Ano"] = df["Ano"].astype(str) + " - T" + df["Trimestre"].astype(str)
+                trimestre_counts = df["Trimestre_Ano"].value_counts().sort_index()
 
-                fig, ax = plt.subplots(figsize=(12, 8))
-                ax.bar(mes_ano_counts.index, mes_ano_counts.values) # type: ignore
-                ax.set_xlabel("Mês/Ano")
-                ax.set_ylabel("Contagem")
-                ax.set_title("Contagem de Datas por Mês/Ano")
-                ax.set_xticklabels(mes_ano_counts.index, rotation=45)
+                string = [f"{trimestre}: {count}" for trimestre, count in trimestre_counts.items()]
+
+                plt.figure(figsize=(12, 8))
+                sns.barplot(x=trimestre_counts.index, y=trimestre_counts.values, color='skyblue')
+                plt.xlabel("Trimestre/Ano")
+                plt.ylabel("Contagem")
+                plt.title("Contagem de Datas por Trimestre/Ano")
+                plt.xticks(rotation=45)
+                plt.tight_layout()
+
+                for i, v in enumerate(trimestre_counts.values):
+                    plt.text(i, v + 0.5, str(v), ha='center', va='bottom', fontsize=10)
 
                 response = string
 
@@ -144,14 +153,20 @@ def index(request):
                 faixa_counts = df['Faixas'].value_counts().sort_index()    
                 string = [f"{faixa}: {count}" for faixa, count in faixa_counts.items()]
        
-                
-                fig, ax = plt.subplots(figsize=(12, 8))
-                ax.barh(faixa_counts.index, faixa_counts.values) # type: ignore
-                ax.set_xlabel("Quantidade de Orçamentos")
-                ax.set_ylabel("Faixa de Valores")
-                ax.set_title("Distribuição de Orçamentos por Faixa")
-                for i, v in enumerate(faixa_counts.values):
-                    ax.text(v + 0.5, i, str(v), va='center')
+                plt.figure(figsize=(12, 8))
+                sns.set_style("whitegrid")
+                bar_plot = sns.barplot(x=faixa_counts.index, y=faixa_counts.values, palette="Blues_r")
+
+                for p in bar_plot.patches:
+                    bar_plot.annotate(f'{p.get_height()}',  # type: ignore
+                                    (p.get_x() + p.get_width() / 2., p.get_height()),  # type: ignore
+                                    ha='center', va='center', 
+                                    fontsize=12, color='black', 
+                                    xytext=(0, 10), textcoords='offset points')
+                plt.title("Distribuição de Orçamentos por Faixa", fontsize=16)
+                plt.xlabel("Faixa de Valores", fontsize=12)
+                plt.ylabel("Quantidade de Orçamentos", fontsize=12)
+                plt.xticks(rotation=45, ha='right') 
 
                 response = string
 
@@ -176,33 +191,37 @@ def index(request):
 
                 string = [f"{ticket_medio}: {count}" for ticket_medio, count in ticket_medio_estado.items()]
 
-                fig, ax = plt.subplots(figsize=(12, 8))
-                ticket_medio_estado.plot(kind="barh", ax=ax, color='skyblue')
-                ax.set_xlabel("Ticket Médio (R$)")
-                ax.set_ylabel("Estado")
-                ax.set_title("Ticket Médio por Estado")
-                plt.xticks(rotation=45)
+                plt.figure(figsize=(12, 8))
+                ax = sns.barplot(x=ticket_medio_estado.values, y=ticket_medio_estado.index, palette='Blues_r')
+                for i, v in enumerate(ticket_medio_estado.values):
+                    ax.text(v + 0.5, i, f'R$ {v:,.2f}', color='black', va='center')
+                ax.set_xlabel("Ticket Médio (R$)", fontsize=14)
+                ax.set_ylabel("Estado", fontsize=14)
+                ax.set_title("Ticket Médio por Estado", fontsize=16)
 
                 response = string
             
             elif param == "ramos_empresariais":
                 ramos = data.get("ramos_empresariais", [])
-                print(ramos)
-                df = pd.DataFrame(ramos, columns=["Ramos Empresariais"])
                 
+                df = pd.DataFrame(ramos, columns=["Ramos Empresariais"])
                 ramos_counts = df["Ramos Empresariais"].value_counts()
+
+                plt.figure(figsize=(12, 8))
+                sns.barplot(
+                    x=ramos_counts.values, 
+                    y=ramos_counts.index, 
+                    palette="viridis"
+                )
+                plt.xlabel("Quantidade de Empresas", fontsize=12)
+                plt.ylabel("Ramos Empresariais", fontsize=12)
+                plt.title("Distribuição dos Ramos Empresariais", fontsize=14)
+                for index, value in enumerate(ramos_counts.values):
+                    plt.text(value + 1, index, str(value), va='center', fontsize=10)
+                plt.grid(axis="x", linestyle="--", alpha=0.7)
+                plt.tight_layout()
+
                 string = [f"{ramo}: {count}" for ramo, count in ramos_counts.items()]
-            
-                fig, ax = plt.subplots(figsize=(10, 8))
-                ax.pie(
-                        ramos_counts.values, # type: ignore
-                        labels=ramos_counts.index, # type: ignore
-                        autopct="%1.1f%%",
-                        colors=["blue", "green", "orange", "red", "purple"],
-                        startangle=140,
-                        wedgeprops={"edgecolor": "black"}
-    )
-                ax.set_title("Distribuição dos Ramos Empresariais")
                 response = string
 
             elif param == "empresarial_orcamento":
@@ -218,18 +237,25 @@ def index(request):
                     orcamentos.append(orcamento)
 
                 df = pd.DataFrame({"Ramo Empresarial": ramos_empresariais, "Orcamento": orcamentos})
-                df_total = df.groupby("Ramo Empresarial")["Orcamento"].sum().sort_values(ascending=False)
-                fig, ax = plt.subplots(figsize=(12, 8))
-                df_total.plot(kind="barh", ax=ax, color='skyblue')
-                ax.set_xlabel("Orçamento Total (R$)")
-                ax.set_ylabel("Ramo Empresarial")
-                ax.set_title("Orçamento Total por Ramo Empresarial")
-                plt.xticks(rotation=45)
-                plt.tight_layout()
-                
-                string = [f"{ramo}: R${orcamento:,.2f}" for ramo, orcamento in df_total.items()]
-                response = string
+                df_total = df.groupby("Ramo Empresarial")["Orcamento"].sum().sort_values(ascending=False).reset_index()
 
+                plt.figure(figsize=(12, 8))
+                sns.barplot(
+                    data=df_total, 
+                    y="Ramo Empresarial", 
+                    x="Orcamento", 
+                    palette="Blues_r"
+                )
+                ax = plt.gca()
+                ax.xaxis.set_major_formatter(mtick.FuncFormatter(lambda x, _: f'R${x:,.0f}'))
+                plt.xlabel("Orçamento Total (R$)")
+                plt.ylabel("Ramo Empresarial")
+                plt.title("Orçamento Total por Ramo Empresarial")
+                plt.grid(axis="x", linestyle="--", alpha=0.7)
+                plt.tight_layout()
+
+                string = [f"{ramo}: R${orcamento:,.2f}" for ramo, orcamento in zip(df_total["Ramo Empresarial"], df_total["Orcamento"])]
+                response = string
 
             buffer = io.BytesIO()  
             plt.savefig(buffer, format="png") 
