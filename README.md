@@ -1,6 +1,6 @@
 # 📊 Projeto Utilizando Vercel, Django e Pandas  
 
-Este projeto foi desenvolvido para **uso interno na empresa** e também para ser comercializado como um serviço **Whitelabel**. Ele atua como um **analista de dados automatizado**, processando informações e gerando gráficos que podem ser utilizados para análises avançadas, incluindo o uso de **IA**.  
+Este projeto foi desenvolvido gerar relatórios sobre uma base de dados extensa. Processa informações e gera gráficos que podem ser utilizados para análises avançadas, incluindo o uso de inteligência artificial  
 
 ## 🚀 Tecnologias Utilizadas  
 Este projeto é baseado em um **stack poderoso** para análise e visualização de dados:  
@@ -17,6 +17,6 @@ O sistema funciona como um **analista de dados**, sendo capaz de:
 ✅ Gerar gráficos visuais baseados nos dados extraídos.  
 ✅ Retornar os gráficos e dados processados para análise posterior (exemplo: envio para IA).  
 
-Este projeto pode ser adaptado e integrado a diversas aplicações, facilitando a **tomada de decisões baseada em dados**.  
+Este projeto pode ser adaptado e integrado a diversas aplicações.  
 
---- 
+---
