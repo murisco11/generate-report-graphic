@@ -1,4 +1,4 @@
-# 📊 Projeto Utilizando Vercel, Django e Pandas  
+# 📊 Gerador de Relatório via Pandas e Seaborn
 
 Este projeto foi desenvolvido gerar relatórios sobre uma base de dados extensa. Processa informações e gera gráficos que podem ser utilizados para análises avançadas, incluindo o uso de inteligência artificial  
 
